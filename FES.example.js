@@ -6,4 +6,5 @@ module.exports = {
     run: (payload) => {
         console.log("This log is coming from the plugin example.js! You can replace this code and create your own plugin.");
     },
+    version: 1
 };
