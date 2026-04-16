@@ -1,0 +1,18 @@
+[
+    {
+        "author": {
+            "link": "https://github.com/Full-Express-Server/",
+            "name": "FES",
+            "verified": true
+        },
+        "plugin": {
+            "name": "example",
+            "description": "This is the example of a plugin.",
+            "display_name":"FES's Example Plugin",
+            "plugin_verified": true
+        },
+        "release_date": 1776354000,
+        "updated_date": 1776354100,
+        "version": 1
+    }
+]
