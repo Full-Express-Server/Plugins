@@ -13,6 +13,41 @@
         },
         "release_date": 1776354000,
         "updated_date": 1776355100,
+        "pre_release": false,
+        "version": 1
+    },
+    {
+        "author": {
+            "link": "https://github.com/Full-Express-Server/",
+            "name": "FES",
+            "verified": true
+        },
+        "plugin": {
+            "name": "database",
+            "description": "The official database plugin that provides a simple DB for FES.",
+            "display_name":"FES's Database Plugin",
+            "plugin_verified": true
+        },
+        "release_date": 1776354000,
+        "updated_date": 1776355100,
+        "pre_release": true,
+        "version": 1
+    },
+    {
+        "author": {
+            "link": "https://flagen.co",
+            "name": "Flagen",
+            "verified": true
+        },
+        "plugin": {
+            "name": "uuid",
+            "description": "Returns a random UUID.",
+            "display_name":"UUIDv4 Plugin",
+            "plugin_verified": true
+        },
+        "release_date": 1776354000,
+        "updated_date": 1776355100,
+        "pre_release": false,
         "version": 1
     }
 ]

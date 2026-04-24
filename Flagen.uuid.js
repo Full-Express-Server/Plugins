@@ -1,22 +1,21 @@
-//THIS IS THE FES EXAMPLE PLUGIN, This format is required!
 
 /**
  * **The Name of the plugin**
  * @type { String }
  */
-const name = `example`;
+const name = `uuid`;
 
 /**
  * **The Author of the plugin**
  * @type { String }
  */
-const author = `FES`;
+const author = `Flagen`;
 
 /**
  * **The Description of the plugin**
  * @type { String }
  */
-const description = `This is the example of a plugin.`;
+const description = `Returns a random UUID.`;
 
 /**
  * **Whether the plugin is enabled or not**
@@ -34,7 +33,10 @@ const version = 1;
  * **The Plugin Permission**
  * @type { Array }
  */
-const permissions = [ ];
+const permissions = [
+    "*",
+    "Flagen.uuid"
+];
 
 /**
  * ### run(exposed, payload);
@@ -54,8 +56,8 @@ const permissions = [ ];
  * @returns { Promise }
  */
 async function run(exposed, payload) {
-    if (payload?.firstStart) return exposed.log("This log is coming from the plugin example.js! You can replace this code and create your own plugin.", { type: "info" });
-    if (exposed.req.method === `POST`) return "This log is coming from the plugin example.js! You can replace this code and create your own plugin. This log is from a different payload, so it will run every time the plugins function is ran, not just on server start.";
-
+    if (payload?.firstStart) return;
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) { let r = Math.random() * 16 | 0, v = c == "x" ? r : (r & 0x3 | 0x8); return v.toString(16); });
 }
-module.exports = { author, description, enabled, name, run, version };
+
+module.exports = { author, description, enabled, name, permissions, run, version };
