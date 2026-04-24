@@ -118,9 +118,9 @@ async function run(exposed, payload) {
         if (!fs.existsSync(join(__dirname, `FES.database`))) {
             fs.mkdirSync(join(__dirname, `FES.database`));
             let plugins = fs.readdirSync(join(__dirname, `FES.database`));
-            dependencies.forEach(plugin => {
-                if (!plugins.includes(plugin)) FESStart.downloadPlugin(plugin);
-            });
+            for (const plugin of dependencies) {
+                if (!plugins.includes(plugin)) await FESStart.downloadPlugin(plugin);
+            }
             const UUID = await exposed.callPlugin(`Flagen.uuid`);
             fs.writeFileSync(join(__dirname, `FES.database/users.json`), JSON.stringify({ 
                 [UUID]: { 
