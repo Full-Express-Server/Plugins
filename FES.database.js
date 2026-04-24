@@ -45,6 +45,7 @@ const permissions = [
     "*",
     "FES.database",
     "FES.database.*",
+    "FES.database.seeRecacted",
     "FES.database.create",
     "FES.database.create.*",
     "FES.database.create.table",
@@ -82,6 +83,9 @@ const permissions = [
     "FES.database.read.table",
     "FES.database.read.table.*",
     "FES.database.read.table.all",
+    "FES.database.read.table.file",
+    "FES.database.read.table.file.*",
+    "FES.database.read.table.file.users",
     "FES.database.read.row",
     "FES.database.read.row.*",
     "FES.database.read.row.all",
@@ -133,7 +137,7 @@ async function run(exposed, payload) {
 
     const command = payload.command.split(/ +/)[0].toLowerCase();
     const args = payload.command.split(/ +/).slice(1).map(arg => arg.toLowerCase());
-    const commands = ["create", "update", "delete",];
+    const commands = [`create`, `read`, `update`, `delete`,];
     if (!commands.includes(command)) throw { status: 400, message: `Invalid command` };
 
     const users = JSON.parse(fs.readFileSync(join(__dirname, `src/plugins/FES.database/users.json`)), `utf-8`);
@@ -142,10 +146,10 @@ async function run(exposed, payload) {
 
     switch (command) {
         case `create`: return await Create(args, payload, users, exposed);
-        case `create`: return await Read(args, payload, users, exposed);
+        case `read`: return await Read(args, payload, users, exposed);
         case `update`: return await Update(args, payload, users, exposed);
         case `delete`: return await Delete(args, payload, users, exposed);
-        default: throw { status: 400, message: `Invalid command, the available commands are: create, update, delete` };
+        default: throw { status: 400, message: `Invalid command, the available commands are: create, read, update, delete` };
     }
 
 }
@@ -155,7 +159,7 @@ async function Create(args, payload, users, exposed) {
     const subCommands = [`table`, `row`, `column`];
     if (!subCommands.includes(args[0])) throw { status: 400, message: `Invalid arguments, The available args are: ${subCommands.join(", ")}` };
     if (args[0] === `table`) {
-        if (!checkPerms(`FES.database.create.*`, users, payload) || !checkPerms(`FES.database.create.table`, users, payload)) throw { status: 403, message: `You do not have permission to create tables` };
+        if (!(checkPerms(`FES.database.create.*`, users, payload) || checkPerms(`FES.database.create.table`, users, payload))) throw { status: 403, message: `You do not have permission to create tables` };
         if (!args[1]) throw { status: 400, message: `Table name is required` };
         if (args[1].toLowerCase() === `all`) throw { status: 400, message: `Invalid Name: A table cannot be named all due to command rules` };
         if (fs.existsSync(join(__dirname, `src/plugins/FES.database/${args[1]}.json`))) throw { status: 400, message: `Table already exists` };
@@ -163,25 +167,25 @@ async function Create(args, payload, users, exposed) {
         fs.writeFileSync(join(__dirname, `src/plugins/FES.database/${args[1]}.json`), JSON.stringify({ [await exposed.callPlugin(`Flagen.uuid`)]: payload.entry }, null, 4));
         return `Table created: ${args[1]}`;
     } else if (args[0] === `row`) {
-        if (!checkPerms(`FES.database.create.*`, users, payload) || !checkPerms(`FES.database.create.row`, users, payload)) throw { status: 403, message: `You do not have permission to create rows` };
+        if (!(checkPerms(`FES.database.create.*`, users, payload) || checkPerms(`FES.database.create.row`, users, payload))) throw { status: 403, message: `You do not have permission to create rows` };
         if (!args[1]) throw { status: 400, message: `Table name is required` };
         if (!fs.existsSync(join(__dirname, `src/plugins/FES.database/${args[1]}.json`))) throw { status: 404, message: `Table does not exist` };
-        let table = JSON.parse(fs.readFileSync(join(__dirname, `src/plugins/FES.database/${args[1]}.json`), `utf-8`));        
+        let table = JSON.parse(fs.readFileSync(join(__dirname, `src/plugins/FES.database/${args[1]}.json`), `utf-8`));
         let UUID; do { UUID = await exposed.callPlugin("Flagen.uuid"); } while (table[UUID]);
         table[UUID] = payload.entry;
         fs.writeFileSync(join(__dirname, `src/plugins/FES.database/${args[1]}.json`), JSON.stringify(table, null, 4));
         return `Row created`;
     } else if (args[0] === `column`) {
-        if (!checkPerms(`FES.database.create.*`, users, payload) || !checkPerms(`FES.database.create.column`, users, payload) || !checkPerms(`FES.database.create.column.*`, users, payload)) throw { status: 403, message: `You do not have permission to create columns` };
+        if (!(checkPerms(`FES.database.create.*`, users, payload) || checkPerms(`FES.database.create.column`, users, payload) || checkPerms(`FES.database.create.column.*`, users, payload))) throw { status: 403, message: `You do not have permission to create columns` };
         if (!args[1]) throw { status: 400, message: `Table name is required` };
         if (!fs.existsSync(join(__dirname, `src/plugins/FES.database/${args[1]}.json`))) throw { status: 404, message: `Table does not exist` };
         let table = JSON.parse(fs.readFileSync(join(__dirname, `src/plugins/FES.database/${args[1]}.json`), `utf-8`)); 
 
         if (args[2] === `all`) {
-            if (!checkPerms(`FES.database.create.column.*`, users, payload) || !checkPerms(`FES.database.create.column.all`, users, payload)) throw { status: 403, message: `You do not have permission to create columns in all rows` };
+            if (!(checkPerms(`FES.database.create.column.*`, users, payload) || checkPerms(`FES.database.create.column.all`, users, payload))) throw { status: 403, message: `You do not have permission to create columns in all rows` };
             if (!payload?.entry?.fields) throw { status: 400, message: `Missing (fields) inside of (entry)`};
             if (args[3] === `--force`) {
-                if (!checkPerms(`FES.database.create.column.*`, users, payload) || !checkPerms(`FES.database.create.column.all.force`, users, payload)) throw { status: 403, message: `You do not have permission to force change columns for all rows` };
+                if (!(checkPerms(`FES.database.create.column.*`, users, payload) || checkPerms(`FES.database.create.column.all.force`, users, payload))) throw { status: 403, message: `You do not have permission to force change columns for all rows` };
                 Object.entries(table).forEach(([id, item]) => { objectsChanged = objectsChanged + addFields(table, id, payload.entry.fields, { overwrite: true }); });
             } else if (typeof args[3] != `undefined` && args[3] != `--force`) throw { status: 400, message: `Invalid arguments, The available args are: all [--force]` };
             Object.entries(table).forEach(([id, item]) => {  objectsChanged = objectsChanged + addFields(table, id, payload.entry.fields, { overwrite: false }); });
@@ -200,18 +204,52 @@ async function Create(args, payload, users, exposed) {
 
 }
 
+async function Read(args, payload, users, exposed) {
+    if (!checkPerms(`FES.database.read`, users, payload)) throw { status: 403, message: `You do not have permission to read database entries` };
+    const subCommands = [`table`, `row`,  `column`];
+    if (!subCommands.includes(args[0])) throw { status: 400, message: `Invalid arguments, The available args are: ${subCommands.join(", ")}` };
+    if (args[0] === `table`) {     
+        if (!(checkPerms(`FES.database.read.*`, users, payload) || checkPerms(`FES.database.read.table`, users, payload))) throw { status: 403, message: `You do not have permission to read tables` };
+        if (!args[1]) throw { status: 400, message: `Table name is required` };
+        if (args[1] === `users` && !checkPerms(`FES.database.read.file.users`, users, payload)) throw { status: 403, message: `You do not have access to read users.json` };
+        if (!fs.existsSync(join(__dirname, `src/plugins/FES.database/${args[1]}.json`))) throw { status: 400, message: `Table does not exist` };
+        let table = JSON.parse(fs.readFileSync(join(__dirname, `src/plugins/FES.database/${args[1]}.json`), `utf-8`));
+        if (!(checkPerms(`FES.database.seeRedacted`, users, payload) || checkPerms(`FES.database.*`, users, payload))) for (const key in table) {
+            if (key === payload.userID) continue;
+            table[key].password_hash = `<REDACTED>`;
+            table[key].permissions = `<REDACTED>`;
+        }
+        return table;
+    } else if (args[0] === `row`) {
+        if (!(checkPerms(`FES.database.read.*`, users, payload) || checkPerms(`FES.database.read.row`, users, payload))) throw { status: 403, message: `You do not have permission to read rows` };
+        if (!args[1]) throw { status: 400, message: `Table name is required` };
+        if (args[1] === `users` && !checkPerms(`FES.database.read.file.users`, users, payload)) throw { status: 403, message: `You do not have access to read users.json` };
+        if (!fs.existsSync(join(__dirname, `src/plugins/FES.database/${args[1]}.json`))) throw { status: 400, message: `Table does not exist` };
+        if (!payload?.entry?.id) throw { status: 400, message: `Missing (id): You need to provide a Row ID in the (entry) key`};
+        let table = JSON.parse(fs.readFileSync(join(__dirname, `src/plugins/FES.database/${args[1]}.json`), `utf-8`));
+        if (!Object.hasOwn(table, payload.entry.id)) throw { status: 404, message: `Row does not exist` };
+        let row = table[payload.entry.id];
+        if (!(checkPerms(`FES.database.seeRedacted`, users, payload) || checkPerms(`FES.database.*`, users, payload))) {
+            if (row.id === payload.userID) return row;
+            row.password_hash = `<REDACTED>`;
+            row.permissions = `<REDACTED>`;
+        }
+        return row;
+    }
+}
+
 async function Update(args, payload, users, exposed) {
     if (!checkPerms(`FES.database.update`, users, payload)) throw { status: 403, message: `You do not have permission to update database entries` };
     const subCommands = [`table`, `column`];
     if (!subCommands.includes(args[0])) throw { status: 400, message: `Invalid arguments, The available args are: ${subCommands.join(", ")}` };
     if (args[0] === `table`) {
-        if (!checkPerms(`FES.database.update.*`, users, payload) || !checkPerms(`FES.database.update.table`, users, payload)) throw { status: 403, message: `You do not have permission to update tables` };
+        if (!(checkPerms(`FES.database.update.*`, users, payload) || checkPerms(`FES.database.update.table`, users, payload))) throw { status: 403, message: `You do not have permission to update tables` };
         if (!args[1]) throw { status: 400, message: `Table name is required` };
         if (!fs.existsSync(join(__dirname, `src/plugins/FES.database/${args[1]}.json`))) throw { status: 400, message: `Table does not exist` };
         let tableCommands = [`rename`];
         if (!tableCommands.includes(args[2])) throw { status: 400, message: `Invalid arguments, The available args are: ${tableCommands.join(`, `)}` };
         if (args[2] === `rename`) {
-            if (!checkPerms(`FES.database.update.table.*`, users, payload) || !checkPerms(`FES.database.update.table.name`, users, payload)) throw { status: 403, message: `You do not have permission to rename tables` };
+            if (!(checkPerms(`FES.database.update.table.*`, users, payload) || checkPerms(`FES.database.update.table.name`, users, payload))) throw { status: 403, message: `You do not have permission to rename tables` };
             if (!args[3]) throw { status: 400, message: `Missing new name` };
             if (!/^[a-zA-Z0-9_-]+$/.test(args[3])) throw { status: 400, message: `Invalid filename`};
             if (fs.existsSync(join(__dirname, `/src/plugins/FES.database/${args[3]}.json`))) throw { status: 409, message: `Cannot Rename: Table with that name already exists` };
@@ -219,16 +257,16 @@ async function Update(args, payload, users, exposed) {
             return `Table ${args[1]} was renamed to ${args[3]}`;
         }
     } else if (args[0] === `column`) {
-        if (!checkPerms(`FES.database.update.*`, users, payload) || !checkPerms(`FES.database.update.column`, users, payload)) throw { status: 403, message: `You do not have permission to update tables` };
+        if (!(checkPerms(`FES.database.update.*`, users, payload) || checkPerms(`FES.database.update.column`, users, payload))) throw { status: 403, message: `You do not have permission to update tables` };
         if (!args[1]) throw { status: 400, message: `Table name is required` };
         if (!fs.existsSync(join(__dirname, `src/plugins/FES.database/${args[1]}.json`))) throw { status: 404, message: `Table does not exist` };
         let table = JSON.parse(fs.readFileSync(join(__dirname, `src/plugins/FES.database/${args[1]}.json`), `utf-8`));
 
         if (args[2] === `all`) {
-            if (!checkPerms(`FES.database.update.column.*`, users, payload) || !checkPerms(`FES.database.update.column.all`, users, payload)) throw { status: 403, message: `You do not have permission to update columns in all rows` };
+            if (!(checkPerms(`FES.database.update.column.*`, users, payload) || checkPerms(`FES.database.update.column.all`, users, payload))) throw { status: 403, message: `You do not have permission to update columns in all rows` };
             if (!payload?.entry?.fields) throw { status: 400, message: `Missing (fields) inside of (entry)`};
             if (args[3] === `--force`) {
-                if (!checkPerms(`FES.database.update.column.*`, users, payload) || !checkPerms(`FES.database.update.column.all.force`, users, payload)) throw { status: 403, message: `You do not have permission to force change columns for all rows` };
+                if (!(checkPerms(`FES.database.update.column.*`, users, payload) || checkPerms(`FES.database.update.column.all.force`, users, payload))) throw { status: 403, message: `You do not have permission to force change columns for all rows` };
                 Object.entries(table).forEach(([id, item]) => { objectsChanged = objectsChanged + addFields(table, id, payload.entry.fields, { overwrite: true }); });
             } else if (typeof args[3] != `undefined` && args[3] != `--force`) throw { status: 400, message: `Invalid arguments, The available args are: all [--force]` };
             Object.entries(table).forEach(([id, item]) => {  objectsChanged = objectsChanged + addFields(table, id, payload.entry.fields, { overwrite: false }); });
@@ -251,7 +289,7 @@ async function Delete(args, payload, users, exposed) {
     const subCommands = [`table`, `row`, `column`];
     if (!subCommands.includes(args[0])) throw { status: 400, message: `Invalid arguments, The available args are: ${subCommands.join(", ")}` };
     if (args[0] === `table`) {
-        if (!checkPerms(`FES.database.delete.*`, users, payload) || !checkPerms(`FES.database.delete.table`, users, payload)) throw { status: 403, message: `You do not have permission to delete tables` };
+        if (!(checkPerms(`FES.database.delete.*`, users, payload) || checkPerms(`FES.database.delete.table`, users, payload))) throw { status: 403, message: `You do not have permission to delete tables` };
         if (!args[1]) throw { status: 400, message: `Table name is required` };
         if (args[1] === `all`) {
             let user = users[payload.userID];
@@ -264,34 +302,59 @@ async function Delete(args, payload, users, exposed) {
             });
             return `Deleted all ${tables.length - 1} tables in the database\n(I hope you knew what you were doing: https://www.google.com/search?&udm=2&q=When+you+delete+the+database+on+prod+meme)`;
         }
-        
         if (!fs.existsSync(join(__dirname, `src/plugins/FES.database/${args[1]}.json`))) throw { status: 400, message: `Table does not exist` };
         fs.unlinkSync(join(__dirname, `src/plugins/FES.database/${args[1]}.json`));
         return `Table Deleted: ${args[1]}`;
-    } else if (args[0] === `column`) {
-        if (!checkPerms(`FES.database.update.*`, users, payload) || !checkPerms(`FES.database.update.column`, users, payload)) throw { status: 403, message: `You do not have permission to update tables` };
+    } else if (args[0] === `row`) {
+        if (!(checkPerms(`FES.database.delete.*`, users, payload) || checkPerms(`FES.database.delete.row`, users, payload))) throw { status: 403, message: `You do not have permission to delete rows` };
         if (!args[1]) throw { status: 400, message: `Table name is required` };
         if (!fs.existsSync(join(__dirname, `src/plugins/FES.database/${args[1]}.json`))) throw { status: 404, message: `Table does not exist` };
         let table = JSON.parse(fs.readFileSync(join(__dirname, `src/plugins/FES.database/${args[1]}.json`), `utf-8`));
-
         if (args[2] === `all`) {
-            if (!checkPerms(`FES.database.update.column.*`, users, payload) || !checkPerms(`FES.database.update.column.all`, users, payload)) throw { status: 403, message: `You do not have permission to update columns in all rows` };
-            if (!payload?.entry?.fields) throw { status: 400, message: `Missing (fields) inside of (entry)`};
-            if (args[3] === `--force`) {
-                if (!checkPerms(`FES.database.update.column.*`, users, payload) || !checkPerms(`FES.database.update.column.all.force`, users, payload)) throw { status: 403, message: `You do not have permission to force change columns for all rows` };
-                Object.entries(table).forEach(([id, item]) => { objectsChanged = objectsChanged + addFields(table, id, payload.entry.fields, { overwrite: true }); });
-            } else if (typeof args[3] != `undefined` && args[3] != `--force`) throw { status: 400, message: `Invalid arguments, The available args are: all [--force]` };
-            Object.entries(table).forEach(([id, item]) => {  objectsChanged = objectsChanged + addFields(table, id, payload.entry.fields, { overwrite: false }); });
-            if (objectsChanged === 0) return { status: 200, message: `No new fields were updated to any rows in the table` };
+            if(!(checkPerms(`FES.database.delete.*`, users, payload) || checkPerms(`FES.database.delete.row.all`, users, payload))) throw { status: 403, message: `You do not have permission to delete all rows` };
+            fs.writeFileSync(join(__dirname, `src/plugins/FES.database/${args[1]}.json`), JSON.stringify({}, null, 4));
+            return `All Rows in table ${args[1]} was deleted`;
+        } else if (args[2] != `all` && typeof args[2] != `undefined`) throw { status: 400, message: `Invalid arguments, The available args are: all` }; 
+        else {
+            if (!payload?.entry?.id) throw { status: 400, message: `Missing (id): You need to provide a Row ID in the (entry) key` };
+            if (table[payload?.entry?.id]) delete table[payload.entry.id];
+            else throw { status: 404, message: `Row does not exist` };
             fs.writeFileSync(join(__dirname, `src/plugins/FES.database/${args[1]}.json`), JSON.stringify(table, null, 4));
-            return `Column${objectsChanged > 1 ? `s` : ``}${args[3] === `--force` ? ` forcefully` : ``} updated in ${objectsChanged} row${objectsChanged > 1 ? `s` : ``}`;
- 
-        } else if (args[2] != `all` && typeof args[2] != `undefined`) throw { status: 400, message: `Invalid arguments, The available args are: all [--force]` }; 
+            return `Row ${payload.entry.id} in table ${args[1]} was deleted`;
+        }
+    } else if (args[0] === `column`) {
+        if (!(checkPerms(`FES.database.delete.*`, users, payload) || checkPerms(`FES.database.delete.column`, users, payload))) throw { status: 403, message: `You do not have permission to delete columns` };
+        if (!args[1]) throw { status: 400, message: `Table name is required` };
+        if (!fs.existsSync(join(__dirname, `src/plugins/FES.database/${args[1]}.json`))) throw { status: 404, message: `Table does not exist` };
+        let table = JSON.parse(fs.readFileSync(join(__dirname, `src/plugins/FES.database/${args[1]}.json`), `utf-8`));
+        let affectedRows = 0;
+        if (args[2] === `all`) {
+            if (!(checkPerms(`FES.database.delete.column.*`, users, payload) || checkPerms(`FES.database.delete.column.all`, users, payload))) throw { status: 403, message: `You do not have permission to delete columns in all rows` };
+            if (!payload?.entry?.fields) throw { status: 400, message: `Missing (fields) inside of (entry)`};
+            if (!Array.isArray(payload?.entry?.fields)) throw { status: 400, message: `(fields) must be an array`};
+            if (payload.entry.fields.includes(`*`)) {
+                for (const key in table) { table[key] = {}; affectedRows++; }
+                fs.writeFileSync(join(__dirname, `src/plugins/FES.database/${args[1]}.json`), JSON.stringify(table, null, 4));
+                return `Deleted all fields in all ${affectedRows} rows`;
+            } else {
+                payload.entry.fields.forEach(value => { for (const key in table) { if (value in table[key]) { delete table[key][value]; affectedRows++; } } });
+                affectedRows = affectedRows / payload.entry.fields.length;
+                fs.writeFileSync(join(__dirname, `src/plugins/FES.database/${args[1]}.json`), JSON.stringify(table, null, 4));
+                if (affectedRows === 0) return `There were no rows to affect`;
+                return `Deleted the defined fields in all ${affectedRows} rows`;
+            }
+        } else if (args[2] != `all` && typeof args[2] != `undefined`) throw { status: 400, message: `Invalid arguments, The available args are: all` }; 
         else {
             if (!payload?.entry?.id) throw { status: 400, message: `Missing (id): You need to provide a Row ID in the (entry) key`};
-            addFields(table, payload.entry.id, payload.entry.fields, { overwrite: true });
-            fs.writeFileSync(join(__dirname, `src/plugins/FES.database/${args[1]}.json`), JSON.stringify(table, null, 4));
-            return `Column updated in row: ${args[1]}`;
+            if (payload.entry.fields.includes(`*`)) {
+                table[payload.entry.id] = {};
+                fs.writeFileSync(join(__dirname, `src/plugins/FES.database/${args[1]}.json`), JSON.stringify(table, null, 4));
+                return `Deleted all fields in the row ${payload.entry.id}`;
+            } else {
+                payload.entry.fields.forEach(value => { for (const key in table) { if (value in table[payload.entry.id]) { delete table[payload.entry.id][value]; } } });
+                fs.writeFileSync(join(__dirname, `src/plugins/FES.database/${args[1]}.json`), JSON.stringify(table, null, 4));
+                return `Deleted the defined fields in the row ${payload.entry.id}`;
+            }
         }
     }
 }
@@ -322,4 +385,4 @@ function addFields(db, id, fields, { overwrite = false } = {}) {
     }
 }
 
-module.exports = { author, name, description, dependencies, enabled, version, run, Create, Update };
+module.exports = { author, name, description, dependencies, enabled, version, run, Create, Read, Update, Delete};
