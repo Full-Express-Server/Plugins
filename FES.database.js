@@ -322,4 +322,4 @@ function addFields(db, id, fields, { overwrite = false } = {}) {
     }
 }
 
-module.exports = { author, name, description, enabled, version, run, Create, Update };
+module.exports = { author, name, description, dependencies, enabled, version, run, Create, Update };

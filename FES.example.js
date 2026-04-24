@@ -37,6 +37,12 @@ const version = 1;
 const permissions = [ ];
 
 /**
+ * **The dependencies of the plugin**
+ * @type { Array }
+ */
+const dependencies = [ ];
+
+/**
  * ### run(exposed, payload);
  * 
  * Used to call the main function of the plugin
@@ -58,4 +64,4 @@ async function run(exposed, payload) {
     if (exposed.req.method === `POST`) return "This log is coming from the plugin example.js! You can replace this code and create your own plugin. This log is from a different payload, so it will run every time the plugins function is ran, not just on server start.";
 
 }
-module.exports = { author, description, enabled, name, run, version };
+module.exports = { author, description, dependencies, enabled, name, run, version };

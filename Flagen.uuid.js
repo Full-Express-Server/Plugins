@@ -39,6 +39,12 @@ const permissions = [
 ];
 
 /**
+ * **The dependencies of the plugin**
+ * @type { Array }
+ */
+const dependencies = [ ];
+
+/**
  * ### run(exposed, payload);
  * 
  * Used to call the main function of the plugin
@@ -60,4 +66,4 @@ async function run(exposed, payload) {
     return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) { let r = Math.random() * 16 | 0, v = c == "x" ? r : (r & 0x3 | 0x8); return v.toString(16); });
 }
 
-module.exports = { author, description, enabled, name, permissions, run, version };
+module.exports = { author, description, dependencies, enabled, name, permissions, run, version };
