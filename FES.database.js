@@ -29,6 +29,15 @@ const enabled = true;
 const version = 1;
 
 /**
+ * **The dependencies of the plugin**
+ * @type { Array }
+ */
+const dependencies = [
+    `Flagen.uuid`
+];
+
+
+/**
  * **The Plugin Permission**
  * @type { Array }
  */
