@@ -1,8 +1,10 @@
+//THIS IS THE FES EXAMPLE PLUGIN, This format is required!
+
 /**
  * **The Name of the plugin**
  * @type { String }
  */
-const name = `uuid`;
+const name = `IPLogger`;
 
 /**
  * **The Author of the plugin**
@@ -14,7 +16,7 @@ const author = `Flagen`;
  * **The Description of the plugin**
  * @type { String }
  */
-const description = `Returns a random UUID.`;
+const description = `A simple IP logger plugin.`;
 
 /**
  * **Whether the plugin is enabled or not**
@@ -32,10 +34,7 @@ const version = 1;
  * **The Plugin Permission**
  * @type { Array }
  */
-const permissions = [
-    "*",
-    "Flagen.uuid"
-];
+const permissions = [ ];
 
 /**
  * **The dependencies of the plugin**
@@ -62,7 +61,8 @@ const dependencies = [ ];
  */
 async function run(exposed, payload) {
     if (payload?.firstStart) return;
-    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) { let r = Math.random() * 16 | 0, v = c == "x" ? r : (r & 0x3 | 0x8); return v.toString(16); });
+    const res = await fetch(`http://ip-api.com/json`);
+    const data = await res.json();
+    return data;
 }
-
-module.exports = { author, description, dependencies, enabled, name, permissions, run, version };
+module.exports = { author, description, dependencies, enabled, name, run, version };

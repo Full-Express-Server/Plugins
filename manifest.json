@@ -49,5 +49,39 @@
         "updated_date": 1776355100,
         "pre_release": false,
         "version": 1
+    },
+    {
+        "author": {
+            "link": "https://flagen.co",
+            "name": "Flagen",
+            "verified": true
+        },
+        "plugin": {
+            "name": "IPLogger",
+            "description": "A simple IP logger plugin.",
+            "display_name":"IP Logger",
+            "plugin_verified": true
+        },
+        "release_date": 1776354000,
+        "updated_date": 1776355100,
+        "pre_release": false,
+        "version": 1
+    },
+    {
+        "author": {
+            "link": "https://flagen.co",
+            "name": "Flagen",
+            "verified": true
+        },
+        "plugin": {
+            "name": "HTML2Base64",
+            "description": "Converts HTML content into a Base64-encoded PNG image.",
+            "display_name":"HTML To Base64 Converter Plugin",
+            "plugin_verified": true
+        },
+        "release_date": 1776354000,
+        "updated_date": 1776355100,
+        "pre_release": false,
+        "version": 1
     }
 ]
